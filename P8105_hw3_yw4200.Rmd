@@ -195,13 +195,16 @@ data_twopanel <- brfss_clean |>
   filter(year == 2006 | year == 2010 & loc_abbreviation == "NY") 
 
 # Create a two-panel plot
-ggplot(data_twopanel, aes(x = response, y = data_value)) +
+two_panel_plot <- ggplot(data_twopanel, aes(x = response, y = data_value)) +
   geom_violin(aes(fill = response),color = "black",alpha = 0.8) +
   facet_wrap(~ year, ncol = 2) +
   labs(title = "Distribution of Data Value in NY State",
        x = "Response",
        y = "Data Value")  +
   theme_minimal()
+
+two_panel_plot
+ggsave("Distribution of Data Value in NY State.png", plot = two_panel_plot)
 ```
 
 
