@@ -68,7 +68,7 @@ items_number_in_aisles <-
   geom_text(aes(label = total_items), vjust = -1, size = 1.3, color = "black")
 
 items_number_in_aisles
-ggsave("The number of items in each aisle.png",plot = items_number_in_aisles)
+ggsave("The number of items in different aisles.png",plot = items_number_in_aisles)
 ```
 
 Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
@@ -204,7 +204,7 @@ two_panel_plot <- ggplot(data_twopanel, aes(x = response, y = data_value)) +
   theme_minimal()
 
 two_panel_plot
-ggsave("Distribution of Data Value in NY State.png", plot = two_panel_plot)
+ggsave("The Distribution of Data Value in NY State.png", plot = two_panel_plot)
 ```
 
 
