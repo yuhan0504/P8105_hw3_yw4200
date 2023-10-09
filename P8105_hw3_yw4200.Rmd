@@ -29,7 +29,6 @@ How many aisles are there, and which aisles are the most items ordered from?
 # count number of aisles
 unique_aisles <- unique(instacart$aisle)
 num_aisles <- length(unique_aisles)
-num_aisles
 
 # count number of different kinds of aisles
 library(dplyr)
@@ -78,7 +77,7 @@ popular_items <- instacart |>
   filter(aisle %in% c("baking ingredients" , "dog food care", "packaged vegetables fruits") )  |>
   group_by(product_name,aisle) |>
   summarise(items_number = n(),.groups = "drop_last") |>
-  arrange(aisle,desc(items_number))
+  arrange(aisle,desc(items_number)) 
 
 # select the three most popular items
 top_items <- popular_items %>%
@@ -86,7 +85,7 @@ top_items <- popular_items %>%
   mutate(rank = rank(desc(items_number))) %>%
   filter(rank <= 3)
 
-top_items
+knitr::kable(top_items, caption = "The three most popular items in each of the aisles")
 ```
 
 Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
@@ -118,7 +117,8 @@ table_mean_hour <- table_mean_hour %>%
 pivot_table <- table_mean_hour|>
   pivot_wider(names_from = order_dow, values_from = mean_hour) |>
   mutate(across(everything(), ~round(., 2)))
-pivot_table
+
+knitr::kable(pivot_table, caption = "The mean hour of the day")
 ```
 
 ## Problem 2
@@ -152,10 +152,9 @@ brfss_clean_2002 <- brfss_clean |>
   group_by(loc_abbreviation) |>
   summarise(num_location = n_distinct(loc_desc)) |>
   filter(num_location >= 7) |>
-  arrange(desc(num_location))
+  arrange(desc(num_location)) 
 
 brfss_clean_2002
-
 # states were observed at 7 or more locations in 2010
 brfss_clean_2010 <- brfss_clean |>
   filter(year == 2010) |>
@@ -196,7 +195,7 @@ data_twopanel <- brfss_clean |>
 
 # Create a two-panel plot
 two_panel_plot <- ggplot(data_twopanel, aes(x = response, y = data_value)) +
-  geom_violin(aes(fill = response),color = "black",alpha = 0.8) +
+  geom_boxplot(aes(fill = response),color = "black",alpha = 0.8) +
   facet_wrap(~ year, ncol = 2) +
   labs(title = "Distribution of Data Value in NY State",
        x = "Response",
@@ -206,10 +205,114 @@ two_panel_plot <- ggplot(data_twopanel, aes(x = response, y = data_value)) +
 two_panel_plot
 ggsave("The Distribution of Data Value in NY State.png", plot = two_panel_plot)
 ```
+## Problem 3
+Accelerometers have become an appealing alternative to self-report techniques for studying physical activity in observational studies and clinical trials, largely because of their relative objectivity. During observation periods, the devices can measure MIMS in a short period; one-minute intervals are common. Because accelerometers can be worn comfortably and unobtrusively, they produce around-the-clock observations.
+
+This problem uses accelerometer data collected on 250 participants in the NHANES study. The participants’ demographic data can be downloaded here, and their accelerometer data can be downloaded here. Variables *MIMS are the MIMS values for each minute of a 24-hour day starting at midnight.
+
+Load, tidy, merge, and otherwise organize the data sets. Your final dataset should include all originally observed variables; exclude participants less than 21 years of age, and those with missing demographic data; and encode data with reasonable variable classes (i.e. not numeric, and using factors with the ordering of tables and plots in mind).
 
 
 ```{r}
+demo_data = read.csv("./local_data/nhanes_covar.csv",skip = 4)
+accel_data = read.csv("./local_data/nhanes_accel.csv")
 
+
+# filter demographic data
+demo_clean <- demo_data |>
+  janitor::clean_names() |>
+  filter(age >= 21 & !is.na(age) & !is.na(sex) & !is.na(education)) |>
+  mutate(sex = case_when(
+    sex == 1 ~ "male", 
+    sex == 2 ~ "female")) |>
+  mutate(education = case_when(
+    education == 1 ~ "Less than high school",
+    education == 2 ~ "High school equivalent",
+    education == 3 ~ "More than high school"
+  )) |>
+  mutate(sex = factor(sex, levels = c("male","female"), ordered = TRUE)) |>
+  mutate(education = factor(education, levels = c("Less than high school", "High school equivalent", "More than high school"), ordered = TRUE))
+
+
+# change accelerometer data more readable
+accel_clean <- accel_data |>
+    janitor::clean_names() |> 
+  pivot_longer(min1:min1440,
+               names_to = "minute",
+               names_prefix = "min",
+               values_to = "mims_value") |>
+     mutate(minute = as.numeric(minute))
+demo_clean
+accel_clean
+
+merge_data <- inner_join(demo_clean, accel_clean, by = "seqn")
+merge_data
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Produce a reader-friendly table for the number of men and women in each education category, and create a visualization of the age distributions for men and women in each education category. Comment on these items.
+```{r}
+# table for the number of men and women in each education category
+education_data <- merge_data |> 
+  pivot_wider(
+    names_from = minute,
+    values_from = mims_value
+  ) |>
+  group_by(sex, education) |> 
+  janitor::tabyl(sex, education) 
+
+education_data |> 
+  knitr::kable(digits = 2)
+
+# a visualization of the age distributions for men and women in each education category
+age_distribution_plot <- ggplot(demo_clean, aes(x = education, y = age)) +
+  geom_boxplot(aes(fill = education),color = "black",alpha = 0.6) +
+  facet_wrap(~ sex, ncol = 2) +
+  labs(title = "The age distributions",
+       x = "Education Level",
+       y = "Age")  +
+  theme(axis.text.x = element_text(size = 5.3))
+
+age_distribution_plot
+ggsave ("The age distributions.png" , plot = age_distribution_plot)
+
+# comments: based on the table for the number of men and women in each education category，we can see that among participants, the number of female with education "more than high school" is most, which is 59; the number of male with education "more than high school" is 56. More details are shown in the table. Based on the plot, we can see that the average age of males whose education are "more than high school" is about 43, which is the youngest group among education level. The same for the female. The average age of males whose education are "less than high school" is about 57, which is the oldest group among education level. The average age of females whose education are "less than high school" and females whose education are "high school" are similar, which is about 63. 
+```
+
+Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate across minutes to create a total activity variable for each participant. Plot these total activities (y-axis) against age (x-axis); your plot should compare men to women and have separate panels for each education level. Include a trend line or a smooth to illustrate differences. Comment on your plot.
+```{r}
+# prepare the data for the plot
+total_activity <- merge_data |>
+  group_by(seqn,age,sex,education) |>
+  summarise(total_activity = sum(mims_value))
+
+#draw total activity plot
+total_activity_plot <- ggplot(total_activity,aes(x = age,y = total_activity,color = sex)) +
+  geom_point(alpha = 0.8) +
+  geom_smooth(alpha = 0.4) +
+  facet_wrap(~ education, ncol = 3) +
+  labs(title = "Total Activities against Age",
+       x = "Age",
+       y = "Total Activity") 
+
+total_activity_plot
+# Comment: Based on this point plot, we can know that although participants likely appear to be dispersed, total activity times for the three groups with different levels of education showed a decreasing trend. People in the group "Less than high school" tends to decline more as age increases. We can also see in the graph the difference in activity time with age between men and women, with men fluctuating less relative to women.
+```
+
+Accelerometer data allows the inspection activity over the course of the day. Make a three-panel plot that shows the 24-hour activity time courses for each education level and use color to indicate sex. Describe in words any patterns or conclusions you can make based on this graph; including smooth trends may help identify differences.
+
+```{r}
+# make the three panel plot
+ three_panel_plot <- ggplot(merge_data, aes(x = minute, y = mims_value, color = sex)) +
+  geom_line(alpha = 0.3) + 
+  geom_smooth(alpha = 0.7, size = 0.5) +
+  facet_wrap(~ education, ncol = 1) +
+  labs(
+    title = "24-Hour Activity Time Courses",
+    x = "24-Hour Minutes",
+    y = "Activity time"
+  )
+three_panel_plot
+
+# Conclusions: The overall distribution of overall activity time is more similar for different levels of education and for different genders, with a gradual increase starting after the 300th minute, leveling off at the 500th-1200th minute, and then starting to decline. The overall fluctuations in activity time for participants with education higher than high school were more volatile than for participants with other levels of education, with males peaking at around the 1100th minute.
+```
+
