@@ -175,7 +175,6 @@ brfss_filter <- brfss_clean |>
   rename(state = loc_abbreviation) |>
   group_by(year,state) |>
   summarise(avg_data_value = mean(data_value, na.rm = TRUE))
-brfss_filter
 
 # Make a “spaghetti” plot
 ggplot(brfss_filter, aes(x = year, y = avg_data_value, group = state, color = state)) +
