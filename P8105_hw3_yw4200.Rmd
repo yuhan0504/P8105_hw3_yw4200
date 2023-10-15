@@ -184,6 +184,8 @@ ggplot(brfss_filter, aes(x = year, y = avg_data_value, group = state, color = st
   x = "Year",
   y = "Average Data Value"
   )
+
+# comment: Form this plot we can see average data value from 2002 to 2010 in different states. To sum up, data values for different states fluctuate sharply over time. In 2005, most states show a large downward trend in values.
 ```
 
 Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
@@ -201,6 +203,8 @@ two_panel_plot <- ggplot(data_twopanel, aes(x = response, y = data_value)) +
   theme_minimal()
 
 two_panel_plot
+
+# comment: In 2006, the proportion of responses "Good" and "Very Good" is more than 60%. In 2010, the proportion of responses "Good" and "Very Good" is higher. We can also know that the distribution of data value in each response in 2006 is wider than those in 2010.
 ```
 ## Problem 3
 Accelerometers have become an appealing alternative to self-report techniques for studying physical activity in observational studies and clinical trials, largely because of their relative objectivity. During observation periods, the devices can measure MIMS in a short period; one-minute intervals are common. Because accelerometers can be worn comfortably and unobtrusively, they produce around-the-clock observations.
@@ -324,6 +328,7 @@ three_panel_plot2 <- merge_data |>
 
 three_panel_plot1
 three_panel_plot2
+
 # Conclusions: The overall distribution of overall activity time is more similar for different levels of education and for different genders, with a gradual increase starting after the 300th minute, leveling off at the 500th-1200th minute, and then starting to decline. The overall fluctuations in activity time for participants with education higher than high school were more volatile than for participants with other levels of education, with males peaking at around the 1100th minute.
 ```
 
